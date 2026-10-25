@@ -1,0 +1,11 @@
+{% extends "core/layouts/plain.html" %}
+{% load skillmatch_tags %}
+{% block title %}Not available{% endblock %}
+{% block content %}
+<div class="empty" style="margin-top:20px">
+    {% icon "lock" 26 %}
+    <h3>You can't open this page</h3>
+    <p>{% if exception %}{{ exception }} {% endif %}You may not have access to it.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary btn-sm">Go to my workspace</a>
+</div>
+{% endblock %}

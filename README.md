@@ -38,13 +38,39 @@ macOS / Linux: the same steps, using `source venv/bin/activate` and `cp`.
 
 ---
 
+## 1b. Deploying on Render
+
+The repository includes `render.yaml` (a Render Blueprint), `build.sh` and `.python-version`.
+
+1. Push the project to GitHub, including `render.yaml`, `build.sh`, `.python-version` and `.gitattributes`.
+2. In the Render dashboard, choose **New → Blueprint**, connect the repository and click **Apply**. This creates:
+   * `skillmatch-db`: a free PostgreSQL database;
+   * `skillmatch`: a free web service.
+3. When asked, fill in `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL` and `DJANGO_SUPERUSER_PASSWORD`. The admin account is created on the first deploy.
+4. Every deploy runs `build.sh`: install → `collectstatic` → `migrate` → `seed_skillmatch`. With `SEED_DEMO=true` it also creates the demo student; set it to `false` to skip that.
+
+Production settings switch on automatically on Render:
+* `DEBUG` off, and HTTPS redirect and secure cookies on;
+* the Render hostname added to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`;
+* static files served by WhiteNoise;
+* the database taken from `DATABASE_URL`.
+
+**Free-plan limits to know** ([Render docs](https://render.com/docs/free)):
+* **Sleep:** the service sleeps after 15 minutes without visits, and the first visit afterwards takes about a minute.
+* **Uploaded files are temporary.** Résumé files and profile photos are deleted when the service restarts or sleeps. Skills extracted from résumés are kept, because they live in the database.
+* **The free database expires 30 days after creation**, followed by a 14-day grace period. Create it close to your evaluation, or upgrade it.
+* **No shell on the free plan.** That's why `build.sh` seeds the data and creates the admin account.
+* **Semantic matching:** Sentence Transformers isn't installed on Render, so it uses TF-IDF matching.
+
+---
+
 ## 2. Running the tests
 
 ```powershell
 python manage.py test core
 ```
 
-**77 tests, all passing** (run on 23 Oct 2026, Python 3.13, Django 6.1.1, SQLite). The tests cover:
+**77 tests, all passing** (run on 25 Oct 2026, Python 3.13, Django 6.1.1) on both SQLite and PostgreSQL 16. The production setup (gunicorn, WhiteNoise, HTTPS settings, `build.sh` run twice) was also checked against PostgreSQL. The tests cover:
 
 | File | What it covers |
 |---|---|

@@ -1,0 +1,11 @@
+{% extends "core/layouts/plain.html" %}
+{% load skillmatch_tags %}
+{% block title %}Page not found{% endblock %}
+{% block content %}
+<div class="empty" style="margin-top:20px">
+    {% icon "search" 26 %}
+    <h3>We couldn't find that page</h3>
+    <p>It may have been removed, closed, or you may not have access to it.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary btn-sm">Go to my workspace</a>
+</div>
+{% endblock %}

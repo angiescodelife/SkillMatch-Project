@@ -1,0 +1,2 @@
+# Keep shell scripts with Unix line endings so they run on Render (Linux).
+*.sh text eol=lf

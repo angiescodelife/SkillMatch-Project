@@ -1,6 +1,5 @@
 """URL configuration for the SkillMatch project."""
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
@@ -15,7 +14,11 @@ urlpatterns = [
     path('', include('core.urls')),
 ]
 
-if settings.DEBUG:
-    # Profile photos only. CVs live outside MEDIA_ROOT and are served by an
-    # owner-only view, never as public files.
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Profile photos only (public by design). CVs live outside MEDIA_ROOT and are
+# served by an owner-only view, never as public files.
+from django.urls import re_path  # noqa: E402
+from django.views.static import serve  # noqa: E402
+
+urlpatterns += [
+    re_path(r'^media/(?P<path>avatars/[^/]+)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]

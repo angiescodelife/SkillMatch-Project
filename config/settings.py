@@ -33,13 +33,22 @@ SECRET_KEY = os.environ.get(
     'django-insecure-dev-only-change-me-skillmatch',
 )
 
-DEBUG = env_bool('DJANGO_DEBUG', True)
+# Render sets RENDER=true on its servers; DEBUG is then off unless forced on.
+ON_RENDER = 'RENDER' in os.environ
+DEBUG = env_bool('DJANGO_DEBUG', not ON_RENDER)
 
 ALLOWED_HOSTS = [
     h.strip()
     for h in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
     if h.strip()
 ]
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
+]
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
 
 # Application definition
@@ -63,6 +72,8 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Serves CSS/JS efficiently in production (python manage.py collectstatic).
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -97,7 +108,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # SQLite by default for local development. Set DATABASE_ENGINE=postgresql
 # (plus the POSTGRES_* variables) to use PostgreSQL, the target database.
 
-if os.environ.get('DATABASE_ENGINE', 'sqlite').lower() in {'postgres', 'postgresql'}:
+if os.environ.get('DATABASE_URL'):
+    # Hosted PostgreSQL (e.g. Render): one connection string.
+    import dj_database_url
+
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600, conn_health_checks=True),
+    }
+elif os.environ.get('DATABASE_ENGINE', 'sqlite').lower() in {'postgres', 'postgresql'}:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -147,6 +165,13 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': ('whitenoise.storage.CompressedManifestStaticFilesStorage' if not DEBUG
+                    else 'django.contrib.staticfiles.storage.StaticFilesStorage'),
+    },
+}
 
 MEDIA_URL = '/media/'
 # CVs and photos are stored here. CVs are never served publicly: they are
@@ -212,5 +237,10 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+if ON_RENDER:
+    # Render terminates HTTPS at its proxy and forwards plain HTTP.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 3600
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

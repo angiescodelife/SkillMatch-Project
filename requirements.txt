@@ -10,3 +10,7 @@ pdfplumber>=0.11
 python-docx>=1.1
 scikit-learn>=1.5
 django-allauth[socialaccount]>=65.0
+# Production / Render
+gunicorn>=23.0
+whitenoise>=6.7
+dj-database-url>=2.2
