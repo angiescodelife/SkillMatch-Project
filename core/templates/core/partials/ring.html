@@ -1,0 +1,9 @@
+{% load skillmatch_tags %}{# Progress ring. Params: value, size, stroke, caption, large #}
+<div class="ring{% if large %} ring-lg{% endif %}" style="width:{{ size }}px;height:{{ size }}px" role="img" aria-label="{{ value|default_if_none:'No' }}{% if value is not None %}%{% endif %} {{ caption }}">
+    <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 100 100">
+        <circle class="ring-track" cx="50" cy="50" r="44" fill="none" stroke-width="{{ stroke|default:6 }}"/>
+        <circle class="ring-fill" cx="50" cy="50" r="44" fill="none" stroke-width="{{ stroke|default:6 }}" stroke-linecap="round"
+                stroke-dasharray="276.46" stroke-dashoffset="{{ value|ring_offset }}" data-offset="{{ value|ring_offset }}"/>
+    </svg>
+    <div class="ring-label"><span class="ring-value">{% if value is None %}–{% else %}{{ value }}%{% endif %}</span><span class="ring-caption">{{ caption }}</span></div>
+</div>

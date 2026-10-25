@@ -1,0 +1,133 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}My profile{% endblock %}
+{% block content %}
+{% include "core/profile/_head.html" with save_form="profile-form" %}
+
+<div class="two-col">
+    <div>
+        <form method="post" enctype="multipart/form-data" id="profile-form" novalidate>
+            {% csrf_token %}
+            <section class="card">
+                <h2 class="card-title" style="margin-bottom:20px">Personal information</h2>
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px">
+                    <span id="avatar-preview">{% include "core/partials/avatar.html" with p=profile large=True %}</span>
+                    <div>
+                        <label for="{{ form.avatar.id_for_label }}" class="btn btn-secondary btn-sm" style="cursor:pointer">Change photo</label>
+                        {{ form.avatar }}
+                        <p class="xsmall muted" style="margin-top:8px" id="avatar-name">JPG or PNG · Max. 5 MB</p>
+                        {% for e in form.avatar.errors %}<p class="error" style="color:var(--red);font-size:11px">{{ e }}</p>{% endfor %}
+                    </div>
+                </div>
+                <div class="form-grid">
+                    {% include "core/partials/field.html" with field=form.full_name %}
+                    {% include "core/partials/field.html" with field=form.email icon_name="mail" %}
+                    {% include "core/partials/field.html" with field=form.location icon_name="map-pin" %}
+                    {% include "core/partials/field.html" with field=form.headline %}
+                    {% include "core/partials/field.html" with field=form.about extra_class="full" %}
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="card-title" style="margin-bottom:18px">Education</h2>
+                {% if profile.university %}
+                <div style="display:flex;gap:14px;align-items:center;margin-bottom:20px">
+                    <span class="logo-tile" style="background:var(--surface-2);color:var(--text-2)">{% icon "graduation-cap" 18 %}</span>
+                    <div style="min-width:0">
+                        <p class="strong" style="font-size:13px">{{ profile.university }}
+                            {% if profile.is_final_year %}<span class="tag tag-purple" style="height:22px;margin-left:8px">Final year</span>{% endif %}
+                        </p>
+                        <p class="xsmall muted" style="margin-top:3px">{{ profile.course_of_study|default:"Course not added" }}{% if profile.education_start or profile.education_end %} · {{ profile.education_start|date:"M Y"|default:"?" }} – {{ profile.education_end|date:"M Y"|default:"present" }}{% endif %}</p>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="form-grid">
+                    {% include "core/partials/field.html" with field=form.university icon_name="graduation-cap" %}
+                    {% include "core/partials/field.html" with field=form.course_of_study %}
+                    {% include "core/partials/field.html" with field=form.graduation_year icon_name="calendar" %}
+                    {% include "core/partials/field.html" with field=form.degree_level %}
+                    {% include "core/partials/field.html" with field=form.education_start %}
+                    {% include "core/partials/field.html" with field=form.education_end %}
+                </div>
+            </section>
+        </form>
+
+        <section class="card" id="resume" style="margin-top:20px">
+            <div class="card-head">
+                <h2 class="card-title">Resume</h2>
+                {% if cv %}<a href="{% url 'cv_download' cv.pk %}" class="card-link" target="_blank" rel="noopener">View resume</a>{% endif %}
+            </div>
+            {% if cv %}
+            <div class="file-row">
+                <span class="file-icon">{% icon "file-text" 22 %}</span>
+                <div style="min-width:0">
+                    <p class="file-name">{{ cv.original_name }}</p>
+                    <p class="file-sub">{{ cv.size|filesizeformat }} · Uploaded {{ cv.uploaded_at|date:"M j, Y" }}</p>
+                </div>
+                <div class="file-actions">
+                    {% if cv.status == 'parsed' %}<span class="tag tag-green">{% icon "check" 12 %} Parsed</span>{% elif cv.status == 'failed' %}<span class="tag tag-amber">{% icon "circle-alert" 12 %} Not read</span>{% else %}<span class="tag">Uploaded</span>{% endif %}
+                    <details class="dropdown">
+                        <summary class="icon-btn" aria-label="Resume options">{% icon "ellipsis" 16 %}</summary>
+                        <div class="menu">
+                            <a href="{% url 'cv_download' cv.pk %}" target="_blank" rel="noopener">{% icon "external-link" 14 %} View resume</a>
+                            {% if cv.status == 'parsed' %}<a href="{% url 'cv_review' cv.pk %}">{% icon "file-check" 14 %} Review extracted skills</a>{% endif %}
+                            <form method="post" action="{% url 'cv_delete' cv.pk %}" data-confirm="Delete your resume? Skills you've already confirmed will stay on your profile.">{% csrf_token %}
+                                <button type="submit">{% icon "trash-2" 14 %} Delete resume</button>
+                            </form>
+                        </div>
+                    </details>
+                </div>
+            </div>
+            {% if cv.status == 'parsed' %}
+            <p class="small" style="display:flex;gap:8px;align-items:center;margin:14px 0 16px;color:var(--text-2)">{% icon "circle-check" 15 "green" %}
+                {% if cv.is_reviewed %}{{ cv_found_count }} skill{{ cv_found_count|pluralize }} extracted. You've reviewed these and added {{ cv_added_count }} to your profile.
+                {% else %}{{ cv_found_count }} skill{{ cv_found_count|pluralize }} extracted. <a class="link" href="{% url 'cv_review' cv.pk %}">Review them now →</a>{% endif %}
+            </p>
+            {% elif cv.status == 'failed' %}
+            <div class="alert alert-error" style="margin:14px 0 16px">{% icon "circle-alert" 15 %}<span>{{ cv.error_message }}</span></div>
+            {% endif %}
+            {% endif %}
+
+            <form method="post" action="{% url 'cv_upload' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="dropzone" data-dropzone{% if not cv %} style="margin-top:0"{% endif %}>
+                    {% icon "cloud-upload" 22 %}
+                    <p class="dz-title">Drop your {% if cv %}updated {% endif %}resume here, or <a href="#" class="link" data-browse>browse files</a></p>
+                    <p class="dz-sub" data-dz-status>PDF or DOCX · Up to 10 MB</p>
+                    {{ cv_form.file }}
+                    <button type="button" class="btn btn-secondary btn-sm" data-browse>{% if cv %}Replace resume{% else %}Upload resume{% endif %}</button>
+                    <noscript><button type="submit" class="btn btn-primary btn-sm">Upload</button></noscript>
+                </div>
+            </form>
+            <p class="xsmall dim" style="margin-top:12px">We read the text of your resume and look for skills from our dictionary. You choose which ones to add.</p>
+        </section>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:22px">
+            <span class="xsmall muted">{% if profile.updated_at %}Last saved {{ profile.updated_at|date:"F j, Y" }}{% endif %}</span>
+            <a href="{% url 'profile' %}" class="btn btn-dark" style="margin-left:auto">Cancel</a>
+            <button type="submit" form="profile-form" class="btn btn-primary">Save changes</button>
+        </div>
+    </div>
+
+    {% include "core/profile/_aside.html" %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var input = document.getElementById('{{ form.avatar.id_for_label }}');
+  if (!input) return;
+  input.style.display = 'none';
+  input.addEventListener('change', function () {
+    var f = input.files[0]; if (!f) return;
+    document.getElementById('avatar-name').textContent = f.name + ' · save to apply';
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var wrap = document.querySelector('#avatar-preview .avatar');
+      wrap.innerHTML = ''; var img = new Image(); img.src = e.target.result; img.alt = ''; wrap.appendChild(img);
+    };
+    reader.readAsDataURL(f);
+  });
+})();
+</script>
+{% endblock %}

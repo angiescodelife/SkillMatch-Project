@@ -1,0 +1,7 @@
+{% load skillmatch_tags %}{# Params: field, icon_name, extra_class #}
+<div class="field{% if field.errors %} has-error{% endif %} {{ extra_class }}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% if icon_name %}<div class="input-wrap">{% icon icon_name 15 %}{{ field }}</div>{% else %}{{ field }}{% endif %}
+    {% if field.help_text and not hide_help %}<p class="help">{{ field.help_text }}</p>{% endif %}
+    {% for e in field.errors %}<p class="error">{{ e }}</p>{% endfor %}
+</div>

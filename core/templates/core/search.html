@@ -1,0 +1,23 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Search</p><h1>{% if q %}Results for “{{ q }}”{% else %}Search SkillMatch{% endif %}</h1></div></div>
+<form method="get" class="search-row" style="grid-template-columns:minmax(0,1fr) auto">
+    <div class="input-wrap">{% icon "search" 16 %}<input type="search" name="q" value="{{ q }}" placeholder="Search skills, opportunities…" aria-label="Search" autofocus></div>
+    <button type="submit" class="btn btn-primary" style="display:inline-flex">Search</button>
+</form>
+{% if q %}
+{% if skills %}
+<section class="card" style="margin-bottom:24px"><h2 class="card-title" style="margin-bottom:14px">In your skills</h2>
+    <div class="tags">{% for us in skills %}<a href="{% url 'skills' %}" class="tag tag-purple">{{ us.skill.name }} · {{ us.proficiency_score }}%</a>{% endfor %}</div>
+</section>
+{% endif %}
+<div class="section-head"><h2>Opportunities</h2><span class="xsmall muted">{{ outcomes|length }} found</span></div>
+{% if outcomes %}
+<div class="opp-list" style="max-width:900px">{% for o in outcomes %}{% include "core/partials/opportunity_card.html" with primary=False %}{% endfor %}</div>
+{% else %}
+<div class="empty">{% icon "search" 26 %}<h3>No opportunities found</h3><p>Try a different role, company or skill name.</p></div>
+{% endif %}
+{% endif %}
+{% endblock %}

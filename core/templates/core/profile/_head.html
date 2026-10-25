@@ -1,0 +1,13 @@
+{% load skillmatch_tags %}
+<div class="page-head" style="margin-bottom:20px">
+    <div>
+        <h1>A profile that tells your story</h1>
+        <p class="sub">Keep your experience and goals up to date for more relevant matches.</p>
+    </div>
+    {% if save_form %}<div class="page-actions hide-mobile"><button type="submit" form="{{ save_form }}" class="btn btn-primary">{% icon "check" 15 %} Save changes</button></div>{% endif %}
+</div>
+<nav class="tabs" aria-label="Profile sections">
+    <a href="{% url 'profile' %}" class="{% if tab == 'profile' %}active{% endif %}">Profile &amp; resume</a>
+    <a href="{% url 'career_preferences' %}" class="{% if tab == 'preferences' %}active{% endif %}">Career preferences</a>
+    <a href="{% url 'account_settings' %}" class="{% if tab == 'account' %}active{% endif %}">Account settings</a>
+</nav>

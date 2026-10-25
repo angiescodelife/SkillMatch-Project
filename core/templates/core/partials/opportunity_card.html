@@ -1,0 +1,33 @@
+{% load skillmatch_tags %}{# Params: o (MatchOutcome), saved_ids, primary (bool), has_skills #}
+{% with opp=o.opportunity %}
+<article class="opp-card">
+    <div class="opp-top">
+        {% include "core/partials/logo_tile.html" with employer=opp.employer %}
+        <div style="min-width:0">
+            <div class="opp-meta">{{ opp.employer.name }} · {{ opp.posted_at|days_ago }}{% if opp.is_sample %} <span class="badge-sample" title="Fictional opportunity for demonstration">Sample</span>{% endif %}</div>
+            <h3 class="opp-title"><a href="{% url 'opportunity_detail' opp.pk %}">{{ opp.title }}</a></h3>
+        </div>
+        <div class="opp-actions">
+            {% if has_skills %}{% include "core/partials/match_badge.html" %}{% endif %}
+            {% include "core/partials/save_button.html" with is_saved=opp.pk|in_list:saved_ids %}
+        </div>
+    </div>
+    <div class="opp-mobile-tags">
+        {% if has_skills %}{% include "core/partials/match_badge.html" %}{% endif %}
+        {% if opp.start_label %}<span class="tag">{{ opp.start_label }}</span>{% endif %}
+    </div>
+    <div class="opp-facts">
+        <span>{% icon "map-pin" 13 %} {{ opp.location }} · {{ opp.get_work_style_display }}</span>
+        {% if opp.pay %}<span>{{ opp.pay }}</span>{% endif %}
+        <span class="hide-mobile">{{ opp.get_opportunity_type_display }}{% if opp.duration %} · {{ opp.duration }}{% endif %}</span>
+    </div>
+    <div class="tags">
+        {% for c in o.comparisons|slice:":4" %}<span class="tag">{{ c.name }}</span>{% endfor %}
+    </div>
+    {% if has_skills %}<p class="opp-reason">{% icon "sparkles" 14 %} <span>{{ o.summary_line }}</span></p>{% endif %}
+    <div class="opp-foot">
+        <span class="small">{% if has_skills and o.total_count %}{{ o.matched_count }} of {{ o.total_count }} role skills matched{% else %}Based on your skills &amp; preferences{% endif %}</span>
+        <a href="{% url 'opportunity_detail' opp.pk %}" class="btn {% if primary %}btn-primary{% else %}btn-dark{% endif %} btn-sm">{% icon "arrow-up-right" 14 %} View match</a>
+    </div>
+</article>
+{% endwith %}

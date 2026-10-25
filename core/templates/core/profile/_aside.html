@@ -1,0 +1,36 @@
+{% load skillmatch_tags %}
+<aside>
+    <div class="card">
+        <h3 class="card-title" style="margin-bottom:20px">Profile strength</h3>
+        <div style="display:flex;gap:18px;align-items:center">
+            {% include "core/partials/ring.html" with value=completion.percent size=78 stroke=6 caption="complete" %}
+            <div>
+                <p class="strong" style="font-size:13px">{% if completion.percent == 100 %}All set, {{ profile.first_name }}.{% elif completion.percent >= 60 %}Looking good, {{ profile.first_name }}.{% else %}Let's build it up, {{ profile.first_name }}.{% endif %}</p>
+                <p class="xsmall muted" style="margin-top:6px;line-height:1.55">{% if completion.missing_count %}{{ completion.missing_count }} more detail{{ completion.missing_count|pluralize }} help{{ completion.missing_count|pluralize:"s," }} us understand your goals.{% else %}Your profile has everything we use for matching.{% endif %}</p>
+            </div>
+        </div>
+        <hr class="divider">
+        <ul class="list-check">
+            {% for item in completion.items %}
+            <li class="{% if not item.done %}todo{% endif %}" title="{{ item.hint }}">{% if item.done %}{% icon "circle-check" 15 %}{% else %}{% icon "circle" 15 %}{% endif %} <span>{{ item.label }}{% if not item.done %}<br><span class="xsmall dim">{{ item.hint }}</span>{% endif %}</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="card-head" style="margin-bottom:16px"><h3 class="card-title">Career preferences</h3><a href="{% url 'career_preferences' %}" class="card-link">Edit</a></div>
+        <dl class="kv" style="margin:0">
+            <dt>Looking for</dt>
+            <dd>{{ profile.career_interest|default:"Not set yet" }}</dd>
+            <dt>Location &amp; work style</dt>
+            <dd>{{ preferences.preferred_locations|default:"Any location" }}{% if preferences.work_styles %} · {{ preferences.work_style_labels|join:" or "|lower|capfirst }}{% endif %}</dd>
+        </dl>
+        <div class="tags">
+            {% for t in preferences.opportunity_type_labels %}<span class="tag tag-purple">{{ t }}</span>{% endfor %}
+            {% if preferences.available_from %}<span class="tag tag-purple">From {{ preferences.available_from|date:"M Y" }}</span>{% endif %}
+        </div>
+        <hr class="divider">
+        <a href="{% url 'career_preferences' %}" class="link small">{% icon "circle-plus" 14 %} {% if preferences.available_from %}Update your availability{% else %}Add your exact availability{% endif %}</a>
+    </div>
+    <p class="footnote" style="padding:0 4px">{% icon "shield-check" 14 %} Your resume is private. Your information is used only to personalise your recommendations.</p>
+</aside>

@@ -1,0 +1,39 @@
+{% extends "core/layouts/auth.html" %}
+{% load skillmatch_tags %}
+{% block title %}Log in{% endblock %}
+{% block auth_top %}<span>New to SkillMatch?</span><a href="{% url 'register' %}">Create an account {% icon "arrow-right" 13 %}</a>{% endblock %}
+{% block content %}
+<p class="eyebrow">Welcome back</p>
+<h2>Your future is waiting.</h2>
+<p class="lede">Log in to pick up where you left off.</p>
+
+{% include "core/partials/google_button.html" with label="Continue with Google" divider="or use your email" %}
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+    {% if form.non_field_errors %}<div class="alert alert-error">{% icon "circle-alert" 15 %}<span>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</span></div>{% endif %}
+
+    <div class="field{% if form.username.errors %} has-error{% endif %}">
+        <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+        <div class="input-wrap">{% icon "mail" 15 %}{{ form.username }}</div>
+        {% for e in form.username.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </div>
+
+    <div class="field{% if form.password.errors %} has-error{% endif %}">
+        <div class="check-row" style="margin-bottom:9px">
+            <label for="{{ form.password.id_for_label }}" style="margin:0">Password</label>
+            <a class="link small" href="{% url 'password_reset' %}">Forgot password?</a>
+        </div>
+        {% include "core/partials/password_input.html" with field=form.password %}
+        {% for e in form.password.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </div>
+
+    <label class="check" style="margin-top:20px">{{ form.remember_me }} Keep me signed in</label>
+
+    <button type="submit" class="btn btn-primary btn-block">{% icon "arrow-right" 15 %} Log in</button>
+</form>
+
+<p class="auth-alt">Finding your first match? <a href="{% url 'register' %}">Create an account</a></p>
+<p class="auth-note">{% icon "shield-check" 13 %} Your profile and resume stay in your control.</p>
+{% endblock %}

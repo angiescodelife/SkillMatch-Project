@@ -1,0 +1,148 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}{{ opp.title }}{% endblock %}
+{% block content %}
+<a href="{% url 'opportunities' %}" class="back-link">{% icon "arrow-left" 14 %} Back to opportunities</a>
+
+<section class="card detail-head">
+    {% include "core/partials/logo_tile.html" with employer=opp.employer large=True %}
+    <div class="detail-info">
+        <div class="opp-meta"><span>{{ opp.employer.name }}</span><span class="tag tag-purple" style="height:22px">{{ opp.get_opportunity_type_display }}</span><span class="muted">Posted {{ opp.posted_at|days_ago|lower }}</span>{% if opp.is_sample %}<span class="badge-sample" title="Fictional opportunity for demonstration">Sample</span>{% endif %}</div>
+        <h1>{{ opp.title }}</h1>
+        <div class="facts">
+            <span>{% icon "map-pin" 13 "show-mobile" %}{{ opp.location }} · {{ opp.get_work_style_display }}</span>
+            {% if opp.pay %}<span>{% icon "banknote" 13 "show-mobile" %}{{ opp.pay }}</span>{% endif %}
+            <span>{% icon "calendar" 13 "show-mobile" %}{{ opp.start_label|default:"Flexible start" }}{% if opp.duration %} · {{ opp.duration }}{% endif %}</span>
+        </div>
+    </div>
+    {% if has_skills %}{% include "core/partials/ring.html" with value=o.score size=104 stroke=5 caption=o.label|lower large=True %}{% endif %}
+</section>
+
+<div class="two-col">
+    <div>
+        <section class="card card-tint">
+            <h2 class="card-title" style="display:flex;gap:10px;align-items:center;margin-bottom:14px">{% icon "sparkles" 17 "purple" %} {% if has_skills %}Why this could be your next step{% else %}See how you match{% endif %}</h2>
+            {% if has_skills %}
+            <p class="small" style="color:var(--text-2);line-height:1.7">{{ o.explanation }}</p>
+            {% if o.text_similarity %}<p class="xsmall muted" style="margin-top:10px">Your profile and resume share {{ o.text_similarity|floatformat:2 }} text similarity with this description (0–1, used to rank equal scores).</p>{% endif %}
+            <div class="tags" style="margin-top:14px"><span class="tag tag-purple">Based on your {% if profile.current_cv.is_reviewed %}reviewed {% endif %}profile · {% now "M j, Y" %}</span></div>
+            {% else %}
+            <p class="small" style="color:var(--text-2);line-height:1.7">Add your skills to see a calculated match score, the skills you already have for this role, and what to learn next.</p>
+            <a href="{% url 'skills' %}" class="btn btn-primary btn-sm" style="margin-top:14px">{% icon "plus" 14 %} Add your skills</a>
+            {% endif %}
+        </section>
+
+        {% if has_skills %}
+        <section class="card">
+            <div class="card-head"><h2 class="card-title">Where you already align</h2><span class="card-link">{{ o.aligned|length }} matched skill{{ o.aligned|length|pluralize }}</span></div>
+            {% if o.aligned %}
+            <div class="show-mobile">
+                {% for c in o.aligned %}
+                <div class="bar-row">
+                    <div class="bar-top"><span style="display:inline-flex;gap:8px;align-items:center">{% if c.status == 'meets' %}{% icon "circle-check" 14 "green" %}{% else %}{% icon "circle-alert" 14 "amber" %}{% endif %}{{ c.name }}</span><span class="{% if c.status == 'meets' %}green{% else %}amber{% endif %}">{% if c.user_score is not None %}{{ c.user_score }}%{% else %}Related{% endif %}</span></div>
+                    <div class="bar {% if c.status == 'meets' %}green{% else %}amber{% endif %}"><span style="width:{{ c.user_score|default:0 }}%"></span></div>
+                    <p class="bar-note">Role target: {{ c.target }}% · {% if c.status == 'meets' %}Meets target{% elif c.status == 'below' %}{{ c.gap_points }}% below target{% else %}Partial credit via {{ c.related_to }}{% endif %}</p>
+                </div>
+                {% endfor %}
+            </div>
+            <table class="table hide-mobile">
+                <thead><tr><th style="width:26%">Skill</th><th style="width:34%">Your proficiency</th><th>Role target</th><th>Alignment</th></tr></thead>
+                <tbody>
+                {% for c in o.aligned %}
+                <tr>
+                    <td><strong style="font-weight:500">{{ c.name }}</strong>{% if not c.is_required %} <span class="xsmall dim">nice-to-have</span>{% endif %}</td>
+                    <td>{% if c.user_score is not None %}<div class="cell-bar"><div class="bar {% if c.status == 'meets' %}green{% else %}amber{% endif %}"><span style="width:{{ c.user_score }}%"></span></div><span class="pct">{{ c.user_score }}%</span></div>{% else %}<span class="xsmall muted">Related: {{ c.related_to }}</span>{% endif %}</td>
+                    <td class="small" style="color:var(--text-2)">{{ c.target }}%</td>
+                    <td>{% if c.status == 'meets' %}<span class="status-ok">{% icon "circle-check" 13 %} Meets target</span>{% elif c.status == 'below' %}<span class="status-warn">{% icon "circle-alert" 13 %} {{ c.gap_points }}% below target</span>{% else %}<span class="status-warn">{% icon "circle-alert" 13 %} Partial credit</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="small muted">None of this role's listed skills are in your profile yet. Every skill below is a chance to grow.</p>
+            {% endif %}
+        </section>
+
+        <section class="card">
+            <div class="card-head"><h2 class="card-title">Room to grow</h2>{% if plan.items %}<span class="card-link">{{ plan.items|length }} gap{{ plan.items|length|pluralize }}</span>{% endif %}</div>
+            {% for item in plan.items %}
+            <div class="grow-item">
+                <span class="grow-icon">{% icon "circle-plus" 15 %}</span>
+                <div class="grow-body">
+                    <h4>{{ item.comparison.name }}</h4>
+                    <p>{% if item.comparison.status == 'below' %}Your {{ item.comparison.user_score }}% is below the role's {{ item.comparison.target }}% target.{% else %}No {{ item.comparison.name }} experience listed in your profile.{% endif %}{% if item.resource %} {{ item.resource.practice_task }}{% endif %}</p>
+                    {% if item.resource %}<a href="{{ item.resource.url }}" class="link xsmall" target="_blank" rel="noopener">{% if item.resource.resource_type == 'guided_project' %}Try a {{ item.resource.hours_label }} guided project{% elif item.resource.resource_type == 'documentation' %}Read the {{ item.resource.provider }} guide{% else %}Start a {{ item.resource.hours_label }} course{% endif %} {% icon "arrow-right" 11 %}</a>{% endif %}
+                </div>
+                <span class="tag tag-amber">{{ item.priority }}{% if item.comparison.status != 'below' %} · Not listed{% endif %}</span>
+            </div>
+            {% empty %}
+            <p class="small muted">You meet every listed skill target for this role. 🎉</p>
+            {% endfor %}
+            {% if plan.items %}
+            <hr class="divider">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <span class="xsmall muted">Build {% if plan.items|length == 1 %}this skill{% elif plan.items|length == 2 %}both skills{% else %}these skills{% endif %} with a focused learning plan.</span>
+                <a href="{% url 'skill_gap' %}?opportunity={{ opp.pk }}" class="btn btn-dark btn-sm">{% icon "arrow-right" 14 %} View skill gap analysis</a>
+            </div>
+            {% endif %}
+        </section>
+        {% else %}
+        <section class="card">
+            <h2 class="card-title" style="margin-bottom:14px">Skills this role asks for</h2>
+            <div class="tags">{% for c in o.comparisons %}<span class="tag">{{ c.name }}{% if not c.is_required %} · nice-to-have{% endif %}</span>{% endfor %}</div>
+        </section>
+        {% endif %}
+
+        <section class="card">
+            <h2 class="card-title" style="margin-bottom:12px">About the role</h2>
+            <p class="small" style="color:var(--text-2);line-height:1.7">{{ opp.description }}</p>
+            {% if opp.responsibility_list %}
+            <ul class="list-check" style="margin-top:12px">{% for r in opp.responsibility_list %}<li>{% icon "check" 14 "dim" %} {{ r }}</li>{% endfor %}</ul>
+            {% endif %}
+            {% if opp.open_to %}<p class="xsmall muted" style="margin-top:12px">{{ opp.open_to }}</p>{% endif %}
+        </section>
+    </div>
+
+    <aside>
+        <div class="card hide-mobile">
+            <form method="post" action="{% url 'opportunity_apply' opp.pk %}">{% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-block">{% icon "arrow-up-right" 15 %} {% if application %}View application{% elif opp.application_url %}Apply on employer site{% else %}View application{% endif %}</button>
+            </form>
+            <div style="margin-top:12px">{% include "core/partials/save_button.html" with full=True %}</div>
+            <p class="xsmall muted" style="text-align:center;margin-top:14px">{% if opp.application_url %}Continue on the employer's website.{% elif opp.is_sample %}Sample opportunity: no real application.{% else %}See the employer's instructions.{% endif %}</p>
+        </div>
+
+        {% if has_skills %}
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom:20px">Inside your {{ o.score }}% match</h3>
+            {% for comp in o.components %}
+            <div class="bar-row">
+                <div class="bar-top"><span>{{ comp.title }}</span><span class="green strong">{% if comp.value is None %}–{% else %}{{ comp.value }}%{% endif %}</span></div>
+                <div class="bar green"><span style="width:{{ comp.value|default:0 }}%"></span></div>
+                <p class="bar-note">{% if comp.value is None %}Not used for this role{% if comp.key == 'preferences' %}: <a class="link" href="{% url 'career_preferences' %}">set your preferences</a>{% endif %}{% else %}{{ comp.weight }}% weight{% if comp.effective_weight != comp.weight %} (counts as {{ comp.effective_weight }}% here){% endif %}{% endif %}</p>
+            </div>
+            {% endfor %}
+            <hr class="divider">
+            <p class="xsmall muted" style="line-height:1.6">A weighted alignment score, not the percentage of skills matched. Core skills carry more weight than nice-to-haves.{% if o.required_coverage is not None %} Baseline required-skill coverage: {{ o.required_coverage }}%.{% endif %} <a class="link" href="{% url 'help' %}#matching">How it's calculated</a></p>
+        </div>
+
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom:12px">Fits what you're looking for</h3>
+            <ul class="pref-list">
+                {% for p in o.preference_checks %}
+                <li class="{{ p.status }}">{% if p.key == 'location' %}{% icon "map-pin" 15 %}{% elif p.key == 'work_style' %}{% icon "laptop" 15 %}{% elif p.key == 'start' %}{% icon "calendar" 15 %}{% elif p.key == 'eligibility' %}{% icon "graduation-cap" 15 %}{% else %}{% icon "briefcase" 15 %}{% endif %}
+                    <span>{{ p.label }}</span><span class="state">{% if p.status == 'match' %}Fits{% elif p.status == 'mismatch' %}Differs{% else %}Not set{% endif %}</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <p class="footnote" style="padding:0 4px">{% icon "info" 13 %} AI can miss context. Scores reflect your self-assessed profile and illustrative role requirements, not a hiring prediction or guarantee.</p>
+    </aside>
+</div>
+
+<div class="sticky-actions">
+    <form method="post" action="{% url 'opportunity_apply' opp.pk %}">{% csrf_token %}<button type="submit" class="btn btn-primary btn-block">{% icon "arrow-up-right" 15 %} View application</button></form>
+    <form method="post" action="{% url 'opportunity_save' opp.pk %}" data-save-toggle>{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" class="btn btn-dark{% if is_saved %} active{% endif %}" aria-pressed="{{ is_saved|yesno:'true,false' }}">{% icon "bookmark" 15 %} <span data-save-label>{% if is_saved %}Saved{% else %}Save{% endif %}</span></button></form>
+</div>
+{% endblock %}
+{% block scripts %}<script>document.getElementById('main').classList.add('has-sticky');</script>{% endblock %}

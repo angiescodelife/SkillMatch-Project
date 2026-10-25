@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% load skillmatch_tags %}
+{% block body %}
+{% csrf_token %}
+<div class="app">
+    {% include "core/partials/sidebar.html" %}
+    <div class="workspace">
+        {% include "core/partials/topbar.html" %}
+        {% include "core/partials/mobile_header.html" %}
+        <main class="main" id="main">
+            {% include "core/partials/messages.html" %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% include "core/partials/tabbar.html" %}
+{% endblock %}

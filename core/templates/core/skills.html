@@ -1,0 +1,158 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}My skills{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h1>Know your strengths. Build your edge.</h1>
+        <p class="sub">Your skills power your matches. Review your levels as you learn and grow.</p>
+    </div>
+    <div class="page-actions"><button type="button" class="btn btn-primary" data-open-modal="add-skill">{% icon "plus" 15 %} Add a skill</button></div>
+</div>
+
+<section class="stat-grid three">
+    <div class="stat-card">
+        <div class="stat-top"><span>Skills in your profile</span>{% icon "layers" 15 %}</div>
+        <div class="stat-value">{{ user_skills|length }}</div>
+        <span class="stat-note">{{ technical|length }} technical · {{ soft|length }} soft skill{{ soft|length|pluralize }}</span>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span>Extracted from your resume</span>{% icon "file-check" 15 %}</div>
+        <div class="stat-value">{{ resume_count }}</div>
+        <a href="{% url 'profile' %}#resume" class="stat-note">{% if resume_count %}Reviewed and confirmed by you{% else %}Upload your resume to find more{% endif %}</a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span>Added by you</span>{% icon "circle-plus" 15 %}</div>
+        <div class="stat-value">{{ self_added|length }}</div>
+        <span class="stat-note">{% for s in self_added|slice:":3" %}{{ s.skill.name }}{% if not forloop.last %} · {% endif %}{% empty %}Add skills your resume doesn't show{% endfor %}</span>
+    </div>
+</section>
+
+{% if not user_skills %}
+<div class="empty">
+    {% icon "layers" 26 %}
+    <h3>Start your skill profile</h3>
+    <p>Add the skills you have and how confident you are in each, or upload your resume and we'll find them for you. Your skills are what SkillMatch compares with each opportunity.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button type="button" class="btn btn-primary btn-sm" data-open-modal="add-skill">{% icon "plus" 14 %} Add a skill</button>
+        <a href="{% url 'profile' %}#resume" class="btn btn-secondary btn-sm">{% icon "cloud-upload" 14 %} Upload resume</a>
+    </div>
+</div>
+{% else %}
+<div class="two-col">
+    <section class="card">
+        <div class="card-head"><h2 class="card-title">Technical skills</h2><span class="card-link">{{ technical|length }} skill{{ technical|length|pluralize }}</span></div>
+        {% if technical %}
+        <div style="display:flex;gap:12px;margin-bottom:20px">
+            <div class="input-wrap" style="flex:1">{% icon "search" 14 %}<input type="search" id="skill-search" placeholder="Find a skill…" aria-label="Find a skill" class="input-surface" style="height:38px"></div>
+            <select id="skill-category" aria-label="Filter by category" class="input-surface" style="width:auto;height:38px;font-weight:600;font-size:12px">
+                <option value="">All categories</option>
+                {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+        <table class="table skills-table">
+            <thead><tr><th style="width:34%">Skill</th><th style="width:34%">Proficiency</th><th>Source</th><th style="width:48px">Edit</th></tr></thead>
+            <tbody>
+            {% for us in technical %}
+            <tr data-skill-row data-name="{{ us.skill.name|lower }}" data-category="{{ us.skill.category }}">
+                <td><strong style="font-size:13px;font-weight:600">{{ us.skill.name }}</strong><br><span class="xsmall muted">{{ us.skill.category|default:"Uncategorised" }}</span></td>
+                <td style="padding-right:28px">
+                    <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:7px"><span style="color:var(--text-2)">{{ us.get_proficiency_display }}</span><span style="color:var(--text-2)">{{ us.proficiency_score }}%</span></div>
+                    <div class="bar"><span style="width:{{ us.proficiency_score }}%"></span></div>
+                </td>
+                <td class="xsmall muted">{{ us.get_source_display }}</td>
+                <td><button type="button" class="icon-btn" aria-label="Edit {{ us.skill.name }}" data-open-modal="edit-skill"
+                    data-action="{% url 'skill_update' us.pk %}" data-name="{{ us.skill.name }}" data-score="{{ us.proficiency_score }}" data-id="{{ us.pk }}">{% icon "pencil" 15 %}</button></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <p class="small muted" id="skill-filter-empty" hidden style="padding:18px 0">No skills match your search.</p>
+        {% else %}
+        <p class="small muted">No technical skills yet. <button type="button" class="link" style="background:none;border:0;cursor:pointer;padding:0" data-open-modal="add-skill">Add one</button></p>
+        {% endif %}
+        <p class="footnote" style="margin-top:16px">{% icon "info" 13 %} Proficiency is self-assessed, not a verified certification.</p>
+    </section>
+
+    <aside>
+        <div class="card">
+            <div class="card-head"><h3 class="card-title">Soft skills</h3><span class="card-link">{{ soft|length }} skill{{ soft|length|pluralize }}</span></div>
+            {% for us in soft %}
+            <div class="bar-row">
+                <div class="bar-top">
+                    <button type="button" style="background:none;border:0;padding:0;cursor:pointer;font-size:12px;color:var(--text)" data-open-modal="edit-skill"
+                        data-action="{% url 'skill_update' us.pk %}" data-name="{{ us.skill.name }}" data-score="{{ us.proficiency_score }}" data-id="{{ us.pk }}" aria-label="Edit {{ us.skill.name }}">{{ us.skill.name }}</button>
+                    <span class="green">{{ us.proficiency_score }}%</span>
+                </div>
+                <div class="bar green"><span style="width:{{ us.proficiency_score }}%"></span></div>
+                <p class="bar-note">{{ us.get_source_display }} · {{ us.get_proficiency_display }}</p>
+            </div>
+            {% empty %}
+            <p class="small muted">Add soft skills such as Communication or Teamwork. Many roles list them.</p>
+            {% endfor %}
+        </div>
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom:18px">What your levels mean</h3>
+            {% for key, band in level_bands.items %}
+            <div style="display:flex;justify-content:space-between;{% if not forloop.first %}margin-top:16px{% endif %}">
+                <div><p class="small strong">{{ key|capfirst }}</p><p class="xsmall muted" style="margin-top:4px">{% if key == 'beginner' %}Learning the fundamentals{% elif key == 'intermediate' %}Can apply with some guidance{% else %}Can work independently{% endif %}</p></div>
+                <span class="xsmall purple">{{ band.0 }}–{{ band.1 }}%</span>
+            </div>
+            {% endfor %}
+            <hr class="divider">
+            <p class="xsmall muted" style="line-height:1.6">A project or course is a great reason to revisit your proficiency.</p>
+        </div>
+    </aside>
+</div>
+{% endif %}
+
+<section class="cta-strip">
+    <span class="icon-lead">{% icon "route" 20 %}</span>
+    <div><h3>Put your next skill in context.</h3><p>See which skills could open more doors for your target roles.</p></div>
+    <a href="{% url 'skill_gap' %}" class="btn btn-dark">{% icon "arrow-right" 15 %} Explore skill gaps</a>
+</section>
+
+<datalist id="skill-dictionary">{% for name in dictionary %}<option value="{{ name }}">{% endfor %}</datalist>
+
+<dialog class="modal" id="add-skill" aria-labelledby="add-skill-title"{% if show_add %} data-open-on-load{% endif %}>
+    <form method="post" action="{% url 'skills' %}" novalidate>
+        {% csrf_token %}
+        <div class="modal-head"><h3 id="add-skill-title">Add a skill</h3><button type="button" class="icon-btn" data-close-modal aria-label="Close">{% icon "x" 16 %}</button></div>
+        <div class="modal-body">
+            {% include "core/partials/field.html" with field=form.name %}
+            <div class="form-grid">
+                {% include "core/partials/field.html" with field=form.skill_type %}
+                {% include "core/partials/field.html" with field=form.category %}
+            </div>
+            <div class="field">
+                <div class="check-row" style="margin-bottom:9px"><label for="id_proficiency_score" style="margin:0">Proficiency</label><span class="xsmall purple" id="add-score-out"></span></div>
+                <input type="range" name="proficiency_score" id="id_proficiency_score" min="1" max="100" value="{{ form.proficiency_score.value|default:50 }}" data-range-output="add-score-out">
+                <p class="help">Beginner 1–39 · Intermediate 40–79 · Advanced 80–100. If the skill is already in our dictionary, its type is set for you.</p>
+                {% for e in form.proficiency_score.errors %}<p class="error">{{ e }}</p>{% endfor %}
+            </div>
+            <div class="modal-foot"><button type="button" class="btn btn-dark" data-close-modal>Cancel</button><button type="submit" class="btn btn-primary">{% icon "plus" 15 %} Add skill</button></div>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="modal" id="edit-skill" aria-labelledby="edit-skill-title">
+    <div class="modal-head"><h3 id="edit-skill-title" data-fill="name">Edit skill</h3><button type="button" class="icon-btn" data-close-modal aria-label="Close">{% icon "x" 16 %}</button></div>
+    <div class="modal-body">
+        <form method="post" data-fill="action" action="">
+            {% csrf_token %}
+            <div class="field">
+                <div class="check-row" style="margin-bottom:9px"><label for="edit-score" style="margin:0">Proficiency</label><span class="xsmall purple" id="edit-score-out"></span></div>
+                <input type="range" name="proficiency_score" id="edit-score" min="1" max="100" value="50" data-fill="score" data-range-output="edit-score-out">
+            </div>
+            <div class="modal-foot" style="margin-top:18px"><button type="button" class="btn btn-dark" data-close-modal>Cancel</button><button type="submit" class="btn btn-primary">Save level</button></div>
+        </form>
+        <hr class="divider">
+        <form method="post" action="{% url 'skills' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="remove">
+            <input type="hidden" name="user_skill_id" value="" data-fill="id">
+            <button type="submit" class="btn btn-danger btn-sm">{% icon "trash-2" 14 %} Remove from my skills</button>
+        </form>
+    </div>
+</dialog>
+{% endblock %}

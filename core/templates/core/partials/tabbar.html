@@ -1,0 +1,7 @@
+{% load skillmatch_tags %}
+<nav class="tabbar" aria-label="Main navigation">
+    <a href="{% url 'dashboard' %}" class="{% if active_nav == 'dashboard' %}active{% endif %}">{% icon "layout-grid" 20 %}Home</a>
+    <a href="{% url 'opportunities' %}" class="{% if active_nav == 'opportunities' or active_nav == 'saved' %}active{% endif %}">{% icon "briefcase-business" 20 %}Matches</a>
+    <a href="{% url 'skills' %}" class="{% if active_nav == 'skills' or active_nav == 'gap' %}active{% endif %}">{% icon "chart-no-axes-column-increasing" 20 %}Skills</a>
+    <a href="{% url 'profile' %}" class="{% if active_nav == 'profile' %}active{% endif %}">{% icon "user" 20 %}Profile</a>
+</nav>

@@ -1,0 +1,41 @@
+{% load skillmatch_tags %}
+<aside class="sidebar" aria-label="Main navigation">
+    <a href="{% url 'dashboard' %}" class="brand"><span class="brand-mark">{% icon "sparkles" 18 %}</span>SkillMatch</a>
+    <div class="nav-label">Your workspace</div>
+    <nav class="nav">
+        <a href="{% url 'dashboard' %}" class="nav-item{% if active_nav == 'dashboard' %} active{% endif %}"{% if active_nav == 'dashboard' %} aria-current="page"{% endif %}>{% icon "layout-grid" 17 %} Dashboard</a>
+        <a href="{% url 'profile' %}" class="nav-item{% if active_nav == 'profile' %} active{% endif %}"{% if active_nav == 'profile' %} aria-current="page"{% endif %}>{% icon "user" 17 %} My profile</a>
+        <a href="{% url 'skills' %}" class="nav-item{% if active_nav == 'skills' %} active{% endif %}"{% if active_nav == 'skills' %} aria-current="page"{% endif %}>{% icon "chart-no-axes-column-increasing" 17 %} My skills</a>
+        <a href="{% url 'opportunities' %}" class="nav-item{% if active_nav == 'opportunities' %} active{% endif %}"{% if active_nav == 'opportunities' %} aria-current="page"{% endif %}>{% icon "briefcase-business" 17 %} Opportunities</a>
+        <a href="{% url 'skill_gap' %}" class="nav-item{% if active_nav == 'gap' %} active{% endif %}"{% if active_nav == 'gap' %} aria-current="page"{% endif %}>{% icon "route" 17 %} Skill gap analysis</a>
+        <a href="{% url 'saved' %}" class="nav-item{% if active_nav == 'saved' %} active{% endif %}"{% if active_nav == 'saved' %} aria-current="page"{% endif %}>{% icon "bookmark" 17 %} Saved <span class="nav-badge" data-saved-count>{{ nav_saved_count|default:0 }}</span></a>
+    </nav>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="promo-card">
+        {% icon "sparkles" 18 %}
+        <h4>Your next chapter starts here.</h4>
+        <p>Turn what you know into where you go.</p>
+        <a href="{% url 'opportunities' %}" class="link">Explore your matches {% icon "arrow-right" 12 %}</a>
+    </div>
+    <a href="{% url 'help' %}" class="help-link">{% icon "circle-help" 15 %} Help &amp; resources</a>
+
+    <details class="user-menu">
+        <summary>
+            {% include "core/partials/avatar.html" with p=nav_profile %}
+            <span>
+                <span class="user-name">{{ nav_profile.display_name|default:user.username }}</span><br>
+                <span class="user-type">{{ nav_profile.get_user_type_display|default:"Student" }} account</span>
+            </span>
+            <span class="chev">{% icon "chevrons-up-down" 14 %}</span>
+        </summary>
+        <div class="menu" role="menu">
+            <a href="{% url 'profile' %}" role="menuitem">{% icon "user" 15 %} My profile</a>
+            <a href="{% url 'account_settings' %}" role="menuitem">{% icon "settings" 15 %} Account settings</a>
+            <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+                <button type="submit" role="menuitem">{% icon "log-out" 15 %} Log out</button>
+            </form>
+        </div>
+    </details>
+</aside>

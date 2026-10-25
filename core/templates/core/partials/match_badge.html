@@ -1,0 +1,1 @@
+{% load skillmatch_tags %}{% if o.score is not None %}<span class="badge-match{% if o.score < 50 %} low{% elif o.score < 70 %} mid{% endif %}" title="{{ o.label }}">{% icon "sparkles" 12 %} {{ o.score }}% match</span>{% endif %}

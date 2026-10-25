@@ -1,0 +1,8 @@
+{% load skillmatch_tags %}
+<header class="mobile-header">
+    <a href="{% url 'dashboard' %}" class="brand"><span class="brand-mark">{% icon "sparkles" 17 %}</span>SkillMatch</a>
+    <div class="right">
+        <a href="{% url 'search' %}" class="icon-btn" aria-label="Search">{% icon "search" 18 %}</a>
+        <a href="{% url 'profile' %}" aria-label="My profile">{% include "core/partials/avatar.html" with p=nav_profile %}</a>
+    </div>
+</header>

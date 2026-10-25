@@ -1,0 +1,33 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}Account settings{% endblock %}
+{% block content %}
+{% include "core/profile/_head.html" %}
+<div class="two-col">
+    <div>
+        <section class="card">
+            <h2 class="card-title" style="margin-bottom:6px">Sign-in details</h2>
+            <p class="card-sub" style="margin-bottom:18px">You sign in with <strong style="color:var(--text)">{{ user.email|default:user.username }}</strong>. Change your email on the <a class="link" href="{% url 'profile' %}">Profile &amp; resume</a> tab.</p>
+            <dl class="kv" style="margin:0"><dt>Account type</dt><dd>{{ profile.get_user_type_display }}</dd><dt>Member since</dt><dd>{{ user.date_joined|date:"F j, Y" }}</dd></dl>
+        </section>
+        <section class="card">
+            <h2 class="card-title" style="margin-bottom:18px">Change password</h2>
+            {% if has_usable_password %}
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="stack">
+                    <div class="field{% if form.old_password.errors %} has-error{% endif %}"><label for="id_old_password">Current password</label>{% include "core/partials/password_input.html" with field=form.old_password %}{% for e in form.old_password.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+                    <div class="field{% if form.new_password1.errors %} has-error{% endif %}"><label for="id_new_password1">New password</label>{% include "core/partials/password_input.html" with field=form.new_password1 %}{% for e in form.new_password1.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+                    <div class="field{% if form.new_password2.errors %} has-error{% endif %}"><label for="id_new_password2">Confirm new password</label>{% include "core/partials/password_input.html" with field=form.new_password2 %}{% for e in form.new_password2.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:20px"><button type="submit" class="btn btn-primary">{% icon "lock" 15 %} Update password</button></div>
+            </form>
+            {% else %}
+            <p class="small muted">You signed up with Google, so there's no SkillMatch password to change.</p>
+            {% endif %}
+        </section>
+        <form method="post" action="{% url 'logout' %}" style="margin-top:20px">{% csrf_token %}<button class="btn btn-ghost" type="submit">{% icon "log-out" 15 %} Log out</button></form>
+    </div>
+    {% include "core/profile/_aside.html" %}
+</div>
+{% endblock %}

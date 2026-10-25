@@ -1,0 +1,14 @@
+{% load skillmatch_tags %}
+<header class="topbar">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'dashboard' %}">Workspace</a> {% icon "chevron-down" 13 "rot-270" %}
+        <strong>{% if crumb %}{{ crumb }}{% elif active_nav == "profile" %}My profile{% elif active_nav == "skills" %}My skills{% elif active_nav == "opportunities" %}Opportunities{% elif active_nav == "gap" %}Skill gap analysis{% elif active_nav == "saved" %}Saved{% elif active_nav == "help" %}Help &amp; resources{% elif active_nav == "dashboard" %}Dashboard{% else %}Search{% endif %}</strong>
+    </nav>
+    <form class="topbar-search" action="{% url 'search' %}" method="get" role="search">
+        {% icon "search" 14 %}
+        <label for="global-search" class="sr-only">Search skills and opportunities</label>
+        <input id="global-search" type="search" name="q" value="{{ q|default:'' }}" placeholder="Search skills, opportunities…">
+        <kbd>⌘ K</kbd>
+    </form>
+    <a href="{% url 'profile' %}" aria-label="My profile">{% include "core/partials/avatar.html" with p=nav_profile %}</a>
+</header>

@@ -1,0 +1,11 @@
+{% load socialaccount %}
+{% if GOOGLE_LOGIN_ENABLED %}
+<form method="post" action="{% provider_login_url 'google' process='login' next='/dashboard/' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-google">
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.35 11.1H12v2.98h5.38c-.24 1.43-1.62 4.2-5.38 4.2-3.24 0-5.88-2.68-5.88-5.98s2.64-5.98 5.88-5.98c1.84 0 3.08.79 3.78 1.46l2.58-2.48C16.7 3.8 14.6 2.8 12 2.8 6.92 2.8 2.8 6.92 2.8 12s4.12 9.2 9.2 9.2c5.31 0 8.83-3.73 8.83-8.98 0-.6-.07-1.06-.15-1.52z"/></svg>
+        {{ label }}
+    </button>
+</form>
+<div class="or-divider">{{ divider }}</div>
+{% endif %}

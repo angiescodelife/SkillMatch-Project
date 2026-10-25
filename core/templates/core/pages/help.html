@@ -1,0 +1,38 @@
+{% extends "core/layouts/plain.html" %}
+{% load skillmatch_tags %}
+{% block title %}Help &amp; how matching works{% endblock %}
+{% block content %}
+{% if user.is_authenticated %}<a href="{% url 'dashboard' %}" class="back-link">{% icon "arrow-left" 14 %} Back to dashboard</a>{% endif %}
+<div class="prose">
+    <p class="eyebrow">Help &amp; resources</p>
+    <h1 style="font-size:30px;margin-top:8px">How SkillMatch works</h1>
+    <p style="margin-top:12px">SkillMatch compares the skills in your profile, and the skills you confirm from your resume, with what each opportunity asks for. It then explains the result: what you already have, what's missing and what to learn next.</p>
+
+    <h2 id="matching">How your match score is calculated</h2>
+    <p>Each opportunity lists the skills it needs, with a target level (1–100) and whether each is <strong>required</strong> or a <strong>nice-to-have</strong>. For every listed skill you receive a credit between 0 and 1:</p>
+    <code class="formula">credit = min(1, your proficiency ÷ role target)   if the skill is in your profile
+credit = 0                                       if it is not{% if backend == 'sentence-transformers' %}
+credit = {{ related_credit }}% × min(1, related skill ÷ target)  if a closely related skill is found{% endif %}</code>
+    <p>Required skills count twice as much as nice-to-haves (weights {{ importance.required|floatformat:0 }} and {{ importance.preferred|floatformat:0 }}). Credits are averaged separately for technical and soft skills. Your career preferences (opportunity type, work style, location, start date and eligibility) form the third part.</p>
+    <code class="formula">match score = {{ weights.technical }}% × technical alignment
+            + {{ weights.soft }}% × soft-skill alignment
+            + {{ weights.preferences }}% × role-preference fit</code>
+    <p>If a part can't be calculated (for example, a role lists no soft skills, or you haven't set preferences), it's left out and the other weights are scaled up so they still add up to 100%. If nothing can be calculated, no score is shown rather than a guess.</p>
+    <p>We also show the simple <strong>required-skill coverage</strong> (required skills you have ÷ required skills × 100) on each match so you can compare the two measures.</p>
+
+    <h3>Labels</h3>
+    <ul>{% for threshold, label in labels %}<li>{{ label }}: {{ threshold }}%{% if not forloop.last %} and above{% else %}+{% endif %}</li>{% endfor %}</ul>
+
+    <h3>Text similarity</h3>
+    <p>We measure how similar the wording of your profile and resume is to each opportunity's description using {% if backend == 'sentence-transformers' %}sentence embeddings (Sentence Transformers){% else %}TF-IDF and cosine similarity{% endif %}. It's used to order opportunities that have the same score; it never changes the score itself.</p>
+
+    <h2>Your resume</h2>
+    <p>When you upload a PDF or Word resume, we read its text and look for skills from SkillMatch's skill dictionary, including common alternative spellings. Nothing is added to your profile until you review it. Your resume is only visible to you.</p>
+
+    <h2>What a score is, and isn't</h2>
+    <p>A match score is guidance about how your recorded skills line up with a role's listed requirements. It is not a prediction of whether you'll be hired, and it can miss experience you haven't added yet.</p>
+
+    <h2>About the sample opportunities</h2>
+    <p>The opportunities currently shown come from fictional organisations created to demonstrate SkillMatch. They are marked <span class="badge-sample">Sample</span>.</p>
+</div>
+{% endblock %}

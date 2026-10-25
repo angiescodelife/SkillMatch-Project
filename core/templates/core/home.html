@@ -1,0 +1,14 @@
+{% extends "core/layouts/auth.html" %}
+{% load skillmatch_tags %}
+{% block title %}Find your potential{% endblock %}
+{% block auth_top %}<span>Already have an account?</span><a href="{% url 'login' %}">Log in {% icon "arrow-right" 13 %}</a>{% endblock %}
+{% block content %}
+<p class="eyebrow">Your skills. Your future.</p>
+<h2>See where your skills can take you.</h2>
+<p class="lede">SkillMatch compares your skills and CV with internships, graduate programmes and entry-level roles, then shows you how well you match, which skills you already have, and what to learn next.</p>
+<div class="stack">
+    <a href="{% url 'register' %}" class="btn btn-primary btn-block">{% icon "arrow-right" 15 %} Get started, it's free</a>
+    <a href="{% url 'login' %}" class="btn btn-secondary btn-block">Log in</a>
+</div>
+<p class="auth-note">{% icon "info" 13 %} Match scores are guidance, not hiring predictions.</p>
+{% endblock %}

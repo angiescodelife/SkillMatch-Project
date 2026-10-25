@@ -1,0 +1,137 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}Skill gap analysis{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">Turn insight into momentum</p>
+        <h1>Your next skills, with a clear plan</h1>
+        <p class="sub">Focus on the gaps that matter for {% if target and target.opportunity_id == choices.0.opportunity_id %}your strongest opportunity{% else %}the role you've chosen{% endif %}.</p>
+    </div>
+    {% if choices %}
+    <div class="page-actions">
+        <details class="dropdown">
+            <summary class="btn btn-dark">{% icon "chevron-down" 15 %} Choose a different role</summary>
+            <div class="menu" style="min-width:300px;max-height:360px;overflow:auto">
+                {% for c in choices %}<a href="?opportunity={{ c.opportunity.pk }}"{% if c.opportunity_id == target.opportunity_id %} aria-current="true" style="color:var(--purple-text)"{% endif %}><span style="flex:1">{{ c.opportunity.title }}<br><span class="xsmall muted">{{ c.opportunity.employer.name }}</span></span><span class="xsmall green">{{ c.score }}%</span></a>{% endfor %}
+            </div>
+        </details>
+    </div>
+    {% endif %}
+</div>
+
+{% if not has_skills %}
+<div class="empty">{% icon "route" 26 %}<h3>Add your skills to see your gaps</h3><p>Skill gap analysis compares the skills in your profile with what each opportunity asks for. Add your skills or upload your resume to begin.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><a href="{% url 'skills' %}" class="btn btn-primary btn-sm">Add skills</a><a href="{% url 'profile' %}#resume" class="btn btn-secondary btn-sm">Upload resume</a></div></div>
+{% elif not target %}
+<div class="empty">{% icon "briefcase" 26 %}<h3>No opportunities to compare yet</h3><p>Once opportunities are available, your gaps for each will appear here.</p></div>
+{% else %}
+{% with opp=target.opportunity %}
+<section class="card target-card">
+    {% include "core/partials/logo_tile.html" with employer=opp.employer %}
+    <div class="target-info"><p class="xsmall muted" style="text-transform:uppercase;letter-spacing:.04em">Your target opportunity</p><p class="strong" style="font-size:14px;margin-top:3px">{{ opp.title }} · {{ opp.employer.name }}</p></div>
+    <span class="badge-match">{{ target.score }}% match today</span>
+    <a href="{% url 'opportunity_detail' opp.pk %}" class="link small">View match {% icon "arrow-right" 12 %}</a>
+</section>
+
+<section class="stat-grid three">
+    <div class="stat-card">
+        <div class="stat-top"><span>Priority skills to build</span>{% icon "route" 15 %}</div>
+        <div class="stat-value">{{ plan.items|length }}</div>
+        <span class="stat-note">{% if not plan.items %}You meet every listed target{% elif plan.core_count %}{{ plan.core_count }} affect{{ plan.core_count|pluralize:'s,' }} core requirements{% elif plan.items|length == 1 %}A nice-to-have for this role{% elif plan.items|length == 2 %}Both are nice-to-haves for this role{% else %}All are nice-to-haves for this role{% endif %}</span>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span>Suggested learning time</span>{% icon "clock" 15 %}</div>
+        <div class="stat-value">{{ plan.hours|floatformat:"-1" }} hr{{ plan.hours|pluralize }}</div>
+        <span class="stat-note">{% for item in plan.items %}{% if item.resource %}{{ item.resource.hours_display }} {{ item.comparison.name }}{% if not forloop.last %} + {% endif %}{% endif %}{% empty %}Nothing required right now{% endfor %}</span>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span>Illustrative match potential</span>{% icon "trending-up" 15 %}</div>
+        <div class="stat-value">{{ target.score }}{% if plan.potential is not None and plan.potential != target.score %} → {{ plan.potential }}{% endif %}%</div>
+        <span class="stat-note">{% if plan.potential != target.score %}If your new proficiency is confirmed{% else %}Already at its ceiling for these skills{% endif %}</span>
+    </div>
+</section>
+
+<div class="two-col">
+    <div>
+        <section class="card">
+            <h2 class="card-title" style="margin-bottom:12px">The gaps behind your score</h2>
+            {% if plan.items %}
+            <div style="display:flex;gap:18px;font-size:10px;color:var(--text-2);margin-bottom:20px"><span style="display:inline-flex;gap:6px;align-items:center"><i style="width:8px;height:8px;border-radius:2px;background:var(--purple);display:inline-block"></i> Your profile</span><span style="display:inline-flex;gap:6px;align-items:center"><i style="width:3px;height:10px;border-radius:2px;background:var(--green);display:inline-block"></i> Role target</span></div>
+            {% for item in plan.items %}{% with c=item.comparison %}
+            <div class="gap-row"{% if not forloop.first %} style="margin-top:18px"{% endif %}>
+                <div><p class="small strong">{{ c.name }}</p><p class="xsmall amber" style="margin-top:3px">{{ item.status_text }}</p></div>
+                <div>
+                    <div class="target-bar"><span style="width:{% if c.user_score %}{{ c.user_score }}%{% else %}0{% endif %}"></span><i style="left:{{ c.target }}%"></i></div>
+                    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:7px"><span>{% if c.user_score %}{{ c.user_score }}%{% else %}Not assessed{% endif %}</span><span class="green">Target {{ c.target }}%</span><span>100%</span></div>
+                </div>
+                <span class="tag tag-outline">{{ item.priority }}</span>
+            </div>
+            {% endwith %}{% endfor %}
+            <hr class="divider">
+            <p class="xsmall muted">"Not listed" means we don't have evidence yet, not that you have no experience. <a href="{% url 'skills' %}" class="link">Add a skill</a> if you already know it.</p>
+            {% else %}
+            <p class="small muted">You meet or exceed every skill target this role lists. Look at "Go a little further" to deepen a strength, or pick a different role.</p>
+            {% endif %}
+        </section>
+
+        {% if plan.items %}
+        <div class="section-head" style="margin-top:28px"><h2>Your focused learning plan</h2><span class="xsmall muted">{{ plan.items|length }} suggested resource{{ plan.items|length|pluralize }}</span></div>
+        <div class="opp-list">
+            {% for item in plan.items %}{% with r=item.resource c=item.comparison %}
+            <article class="opp-card">
+                <div class="opp-top">
+                    <span class="logo-tile" style="background:var(--purple-soft);color:var(--purple-text)">{% if r.resource_type == 'guided_project' %}{% icon "shapes" 18 %}{% elif r.resource_type == 'documentation' %}{% icon "book-open" 18 %}{% else %}{% icon "flask-conical" 18 %}{% endif %}</span>
+                    <div style="min-width:0;flex:1">
+                        <h3 class="opp-title" style="margin-top:0">{% if r %}{{ r.title }}{% else %}Build your {{ c.name }}{% endif %}</h3>
+                        <p class="xsmall muted" style="margin-top:4px">{% if r %}{{ r.provider }} · {{ r.get_resource_type_display }}{% else %}Self-directed practice{% endif %}</p>
+                    </div>
+                    <span class="tag {% if item.is_priority %}tag-amber{% else %}tag-outline{% endif %}">{% if item.is_priority %}Priority{% else %}Nice-to-have{% endif %}</span>
+                </div>
+                <p class="small" style="color:var(--text-2);margin:16px 0 14px;line-height:1.6">{% if r %}{{ r.description }}{% else %}We don't have a curated resource for {{ c.name }} yet. Use a small project to build and show this skill.{% endif %}</p>
+                <div class="tags"><span class="tag tag-purple">{{ c.name }}</span>{% if r %}<span class="tag">{{ r.hours_display }} · {{ r.cost }}</span><span class="tag">{{ r.get_level_display }}</span>{% endif %}</div>
+                {% if r.practice_task %}<p class="small" style="display:flex;gap:10px;align-items:center;margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:8px;color:var(--text-2)">{% icon "code-xml" 14 "green" %} Practice: {{ r.practice_task }}</p>{% endif %}
+                <div class="opp-foot">
+                    <span class="small">Suggested resource · {% if r %}Free external link{% else %}No link yet{% endif %}</span>
+                    {% if r %}<a href="{{ r.url }}" class="btn btn-dark btn-sm" target="_blank" rel="noopener">{% icon "arrow-up-right" 14 %} View resource</a>{% endif %}
+                </div>
+            </article>
+            {% endwith %}{% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <aside>
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom:18px">From learning to evidence</h3>
+            <ul class="list-check">
+                <li>{% icon "book-open" 16 "purple" %} <span><strong style="color:var(--text)">Learn the fundamentals</strong><br><span class="xsmall">Start with the focused resources in your plan.</span></span></li>
+                <li>{% icon "code-xml" 16 "purple" %} <span><strong style="color:var(--text)">Build something small</strong><br><span class="xsmall">Apply each skill in a project you can explain.</span></span></li>
+                <li>{% icon "circle-check" 16 "purple" %} <span><strong style="color:var(--text)">Update your profile</strong><br><span class="xsmall">Add your skill, assess your level, and attach project evidence.</span></span></li>
+            </ul>
+            <hr class="divider">
+            <a href="{% url 'skills' %}" class="btn btn-dark btn-block">Update my skills</a>
+        </div>
+        {% if plan.further %}{% with c=plan.further.comparison r=plan.further.resource %}
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom:12px">Go a little further</h3>
+            <span class="tag tag-purple">Optional · Not a priority gap</span>
+            <p class="strong" style="font-size:14px;margin:14px 0 8px">Deepen your {{ c.name }}</p>
+            <p class="small" style="color:var(--text-2);line-height:1.6">You already meet the role's target at {{ c.user_score }}% (target {{ c.target }}%). {{ r.description }}</p>
+            <p class="xsmall muted" style="margin:12px 0">{{ r.provider }} · {{ r.hours_label }} {{ r.get_resource_type_display|lower }}</p>
+            <a href="{{ r.url }}" class="link small" target="_blank" rel="noopener">Explore the resource {% icon "arrow-up-right" 12 %}</a>
+        </div>
+        {% endwith %}{% endif %}
+        {% if in_demand %}
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom:6px">In demand across your matches</h3>
+            <p class="xsmall muted" style="margin-bottom:14px">Skills missing most often from your top 10 matches.</p>
+            <div class="tags">{% for s in in_demand %}<span class="tag">{{ s.name }}</span>{% endfor %}</div>
+        </div>
+        {% endif %}
+        <p class="footnote" style="padding:0 4px">{% icon "info" 13 %} Learning times and future match scores are illustrative. Completing a resource doesn't automatically verify a skill or change your score; update your skills when you're ready.</p>
+    </aside>
+</div>
+{% endwith %}
+{% endif %}
+{% endblock %}

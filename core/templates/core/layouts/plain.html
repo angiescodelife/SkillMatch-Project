@@ -1,0 +1,9 @@
+{% extends "core/base.html" %}
+{% load skillmatch_tags %}
+{% block body %}
+<div class="plain">
+    <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="brand"><span class="brand-mark">{% icon "sparkles" 18 %}</span>SkillMatch</a>
+    {% include "core/partials/messages.html" %}
+    {% block content %}{% endblock %}
+</div>
+{% endblock %}

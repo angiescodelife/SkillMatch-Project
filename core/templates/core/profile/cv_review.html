@@ -1,0 +1,61 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}Review resume skills{% endblock %}
+{% block content %}
+<a href="{% url 'profile' %}#resume" class="back-link">{% icon "arrow-left" 14 %} Back to profile</a>
+<div class="page-head">
+    <div>
+        <p class="eyebrow">Resume analysis</p>
+        <h1>Confirm the skills we found</h1>
+        <p class="sub">We found {{ items|length }} skill{{ items|length|pluralize }} in <strong>{{ cv.original_name }}</strong>. Choose which to add and set how confident you are in each.</p>
+    </div>
+</div>
+<div class="two-col">
+    <form method="post" class="card">
+        {% csrf_token %}
+        {% if new_items %}
+        <div class="card-head">
+            <h2 class="card-title">New skills ({{ new_items|length }})</h2>
+            <div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-xs" data-check-all="on">Select all</button><button type="button" class="btn btn-ghost btn-xs" data-check-all="off">Clear</button></div>
+        </div>
+        <table class="table responsive">
+            <thead><tr><th style="width:40%">Skill</th><th>Found in your resume</th><th style="width:34%">Your proficiency</th></tr></thead>
+            <tbody>
+            {% for item in new_items %}
+            <tr>
+                <td><label class="check" style="font-size:13px;color:var(--text)"><input type="checkbox" name="keep_{{ item.pk }}" value="1" data-review-check {% if item.status != 'rejected' %}checked{% endif %}> <span><strong>{{ item.skill.name }}</strong><br><span class="xsmall muted">{{ item.skill.get_skill_type_display }}{% if item.skill.category %} · {{ item.skill.category }}{% endif %}</span></span></label></td>
+                <td class="xsmall muted" style="padding-right:16px">{{ item.occurrences }} mention{{ item.occurrences|pluralize }}{% if item.context %}<br><span class="dim">“{{ item.context|truncatechars:90 }}”</span>{% endif %}</td>
+                <td>
+                    <input type="range" name="score_{{ item.pk }}" min="1" max="100" value="{{ item.suggested }}" data-range-output="out-{{ item.pk }}" aria-label="Proficiency for {{ item.skill.name }}">
+                    <span class="xsmall purple" id="out-{{ item.pk }}">{{ item.suggested }}%</span>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="small muted">Every skill we found is already in your profile.</p>
+        {% endif %}
+        {% if existing_items %}
+        <hr class="divider">
+        <p class="small strong" style="margin-bottom:10px">Already in your profile</p>
+        <div class="tags">{% for item in existing_items %}<span class="tag tag-green">{% icon "check" 12 %} {{ item.skill.name }}</span>{% endfor %}</div>
+        {% endif %}
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
+            <a href="{% url 'profile' %}" class="btn btn-dark">Decide later</a>
+            <button type="submit" class="btn btn-primary">{% icon "check" 15 %} Add selected skills</button>
+        </div>
+    </form>
+    <aside>
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom:12px">How this works</h3>
+            <ul class="list-check">
+                <li>{% icon "file-text" 15 "purple" %} We read the text of your resume. Nothing is shared with employers.</li>
+                <li>{% icon "search" 15 "purple" %} We look for skills from SkillMatch's skill dictionary, including common spellings like “JS” or “ReactJS”.</li>
+                <li>{% icon "sliders-horizontal" 15 "purple" %} The starting level is a suggestion based on how often a skill appears. Adjust it to reflect your real experience.</li>
+            </ul>
+        </div>
+        <p class="footnote" style="padding:0 4px">{% icon "info" 13 %} Automated extraction can miss skills or pick up words used in another sense. Only skills you select are added.</p>
+    </aside>
+</div>
+{% endblock %}

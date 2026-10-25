@@ -1,0 +1,45 @@
+{% extends "core/layouts/auth.html" %}
+{% load skillmatch_tags %}
+{% block title %}Create account{% endblock %}
+{% block auth_top %}<span>Already have an account?</span><a href="{% url 'login' %}">Log in {% icon "arrow-right" 13 %}</a>{% endblock %}
+{% block content %}
+<p class="eyebrow">Your next chapter starts here</p>
+<h2>Find where you belong.</h2>
+<p class="lede">Create your free account. Build a profile that opens the right doors.</p>
+
+{% include "core/partials/google_button.html" with label="Sign up with Google" divider="or sign up with email" %}
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    {% include "core/partials/field.html" with field=form.full_name icon_name="user" %}
+    {% include "core/partials/field.html" with field=form.email icon_name="mail" %}
+    {% include "core/partials/field.html" with field=form.university icon_name="graduation-cap" %}
+
+    <div class="field{% if form.password.errors %} has-error{% endif %}">
+        <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+        {% include "core/partials/password_input.html" with field=form.password %}
+        <p class="pass-hint" id="pass-hint">{% icon "circle-check" 12 %} At least 8 characters, a number, and a symbol</p>
+        {% for e in form.password.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </div>
+
+    <div class="field">
+        <span class="field-label" id="user-type-label">{{ form.user_type.label }}</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="user-type-label">
+            {% for radio in form.user_type %}
+            <span>
+                <input type="radio" name="{{ radio.data.name }}" value="{{ radio.data.value }}" id="{{ radio.id_for_label }}"{% if radio.data.selected %} checked{% endif %}>
+                <label for="{{ radio.id_for_label }}"><span class="dot"></span>{{ radio.choice_label }}</label>
+            </span>
+            {% endfor %}
+        </div>
+        {% for e in form.user_type.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </div>
+
+    <label class="check" style="margin-top:20px">{{ form.agree_terms }} <span>I agree to the <a class="link" href="{% url 'terms' %}" target="_blank">Terms of Service</a> and <a class="link" href="{% url 'privacy' %}" target="_blank">Privacy Policy</a>. My profile and resume remain in my control.</span></label>
+    {% for e in form.agree_terms.errors %}<p class="error" style="color:var(--red);font-size:11px;margin-top:6px">{{ e }}</p>{% endfor %}
+
+    <button type="submit" class="btn btn-primary btn-block">{% icon "arrow-right" 15 %} Create my account</button>
+</form>
+<p class="auth-note">Next: upload your resume and confirm your skills.</p>
+{% endblock %}
+{% block scripts %}<script>document.getElementById('id_password').setAttribute('data-password-hint','pass-hint');</script>{% endblock %}

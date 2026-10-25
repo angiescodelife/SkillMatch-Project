@@ -1,0 +1,120 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}Opportunities{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">Find your next chapter</p>
+        <h1>Opportunities that fit you</h1>
+        <p class="sub">{% if has_skills %}{{ foryou_count }} recommendation{{ foryou_count|pluralize }} shaped around your skills, goals, and preferences.{% else %}{{ all_count }} opportunities. Add your skills to see how well you match each one.{% endif %}</p>
+    </div>
+    <div class="page-actions hide-mobile"><a href="{% url 'saved' %}" class="btn btn-dark">{% icon "bookmark" 15 %} Saved opportunities · <span data-saved-count>{{ saved_ids|length }}</span></a></div>
+</div>
+
+<form method="get" id="opp-filters" data-autosubmit>
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <div class="search-row">
+        <div class="input-wrap q">{% icon "search" 16 %}<input type="search" name="q" value="{{ q }}" placeholder="Role, company, or skill" aria-label="Search by role, company, or skill"></div>
+        <div class="input-wrap">{% icon "map-pin" 15 %}<input type="text" name="loc" value="{{ loc }}" placeholder="Nairobi or remote" aria-label="Location"></div>
+        <button type="submit" class="btn btn-primary submit">Search opportunities</button>
+        <button type="button" class="btn btn-secondary filters-toggle" data-toggle-target="filters-panel" aria-expanded="false" aria-controls="filters-panel">{% icon "sliders-horizontal" 15 %} Filters</button>
+    </div>
+</form>
+
+<div class="filters-layout">
+    <aside id="filters-panel">
+        <div class="filter-card">
+            <div class="card-head"><h2 class="card-title" style="font-size:14px">Filters</h2><a href="{{ clear_url }}" class="card-link">Reset</a></div>
+            <div class="filter-group">
+                <h4>Opportunity type</h4>
+                {% for key, label, count in type_options %}
+                <div class="check-row"><label class="check"><input type="checkbox" name="type" value="{{ key }}" form="opp-filters"{% if key in types %} checked{% endif %}> {{ label }}</label><span class="count">{{ count }}</span></div>
+                {% endfor %}
+            </div>
+            <div class="filter-group">
+                <h4>Work style</h4>
+                {% for key, label, count in style_options %}
+                <div class="check-row"><label class="check"><input type="checkbox" name="style" value="{{ key }}" form="opp-filters"{% if key in styles %} checked{% endif %}> {{ label }}</label><span class="count">{{ count }}</span></div>
+                {% endfor %}
+            </div>
+            {% if has_skills %}
+            <div class="filter-group">
+                <div class="check-row" style="margin-bottom:12px"><h4 style="margin:0"><label for="min-match">Minimum match</label></h4><span class="green small strong" id="min-out">{{ min_match }}%</span></div>
+                <input type="range" id="min-match" name="min" min="0" max="100" step="5" value="{{ min_match }}" form="opp-filters" data-range-value="min-out">
+                <div class="range-ends"><span>0%</span><span>100%</span></div>
+            </div>
+            {% endif %}
+            <div class="filter-group">
+                <h4><label for="start-filter">Start date</label></h4>
+                <select name="start" id="start-filter" form="opp-filters">
+                    <option value="">Any start date</option>
+                    {% for s in start_options %}<option value="{{ s }}"{% if s == start %} selected{% endif %}>{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+            {% if user_skills %}
+            <div class="filter-group">
+                <h4><label for="skill-filter">Your skills</label></h4>
+                {% for sid in skill_ids %}<input type="hidden" name="skill" value="{{ sid }}" form="opp-filters">{% endfor %}
+                <div class="tags" style="margin-bottom:12px">
+                    {% for us in user_skills %}{% if us.skill_id in skill_ids %}<span class="tag tag-purple">{{ us.skill.name }}</span>{% endif %}{% endfor %}
+                </div>
+                <select name="skill" id="skill-filter" form="opp-filters">
+                    <option value="">{% if skill_ids %}Add another skill…{% else %}Uses one of my skills…{% endif %}</option>
+                    {% for us in user_skills %}{% if us.skill_id not in skill_ids %}<option value="{{ us.skill_id }}">{{ us.skill.name }}</option>{% endif %}{% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </div>
+        <div class="filter-card">
+            {% icon "sparkles" 18 "purple" %}
+            <h3 style="font-size:13px;margin:14px 0 10px;font-weight:600">Why these matches?</h3>
+            <p class="xsmall" style="color:var(--text-2);line-height:1.65;margin-bottom:12px">We compare your skills, proficiency, and preferences with each role's requirements.</p>
+            <a href="{% url 'help' %}#matching" class="link xsmall">How matching works {% icon "arrow-right" 11 %}</a>
+        </div>
+    </aside>
+
+    <section>
+        <div class="list-tabs">
+            {% if has_skills %}<a href="?tab=foryou&{{ tab_query }}" class="{% if tab == 'foryou' %}active{% endif %}">For you · {{ foryou_count }}</a>{% endif %}
+            <a href="?tab=all&{{ tab_query }}" class="{% if tab == 'all' %}active{% endif %}">All opportunities{% if not has_skills %} · {{ all_count }}{% endif %}</a>
+            <a href="{% url 'saved' %}" class="icon-btn saved-icon" aria-label="Saved opportunities">{% icon "bookmark" 16 %}</a>
+            <label class="sort hide-mobile">Sort by
+                <select name="sort" form="opp-filters" aria-label="Sort by">
+                    <option value="match"{% if sort != 'newest' %} selected{% endif %}>{% if has_skills %}Best match{% else %}Relevance{% endif %}</option>
+                    <option value="newest"{% if sort == 'newest' %} selected{% endif %}>Newest</option>
+                </select>
+            </label>
+        </div>
+        <p class="xsmall muted show-mobile" style="margin-bottom:12px">{{ total }} opportunit{{ total|pluralize:"y,ies" }}</p>
+        {% if chips %}
+        <div class="chip-row">
+            {% for label, url in chips %}<span class="tag tag-purple">{{ label }} <a href="{{ url }}" aria-label="Remove filter {{ label }}">{% icon "x" 11 %}</a></span>{% endfor %}
+            <a href="{{ clear_url }}" class="clear">Clear all</a>
+        </div>
+        {% endif %}
+
+        {% if outcomes %}
+        <div class="opp-list">
+            {% for o in outcomes %}{% include "core/partials/opportunity_card.html" with primary=forloop.first %}{% endfor %}
+        </div>
+        <div class="pagination">
+            <span class="xsmall muted">Showing {{ page.start_index }}–{{ page.end_index }} of {{ total }} opportunit{{ total|pluralize:"y,ies" }}</span>
+            {% if page.paginator.num_pages > 1 %}
+            <div class="pages">
+                {% if page.has_previous %}<a class="btn btn-dark btn-sm" href="?{% query_replace page=page.previous_page_number %}">Previous</a>{% endif %}
+                {% for n in page.paginator.page_range %}{% if n == page.number %}<span class="page-num current" aria-current="page">{{ n }}</span>{% elif n > page.number|add:"-3" and n < page.number|add:"3" %}<a class="page-num hide-mobile" href="?{% query_replace page=n %}">{{ n }}</a>{% endif %}{% endfor %}
+                {% if page.has_next %}<a class="btn btn-dark btn-sm" href="?{% query_replace page=page.next_page_number %}">Next {% icon "arrow-right" 13 %}</a>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% elif tab == 'foryou' and not has_skills %}
+        <div class="empty">{% icon "layers" 26 %}<h3>Add skills to get recommendations</h3><p>Recommendations are calculated from your skills. Add a few, or upload your resume.</p><a href="{% url 'skills' %}" class="btn btn-primary btn-sm">Add skills</a></div>
+        {% else %}
+        <div class="empty">{% icon "search" 26 %}<h3>No opportunities match these filters</h3><p>Try removing a filter{% if tab == 'foryou' %}, or browse all opportunities. "For you" only shows roles where you match 50% or more{% endif %}.</p>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><a href="{{ clear_url }}" class="btn btn-secondary btn-sm">Clear filters</a>{% if tab == 'foryou' %}<a href="?tab=all" class="btn btn-primary btn-sm">All opportunities</a>{% endif %}</div>
+        </div>
+        {% endif %}
+        <p class="footnote" style="margin-top:22px">{% icon "sparkles" 13 "purple" %} Illustrative sample opportunities from fictional organisations. Match scores are guidance, not hiring predictions.</p>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% load skillmatch_tags %}
+<form method="post" action="{% url 'opportunity_save' opp.pk %}" data-save-toggle>
+    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+    {% if full %}
+    <button type="submit" class="btn btn-dark btn-block{% if is_saved %} active{% endif %}" aria-pressed="{{ is_saved|yesno:'true,false' }}">{% icon "bookmark" 15 %} <span data-save-label>{% if is_saved %}Saved{% else %}Save opportunity{% endif %}</span></button>
+    {% else %}
+    <button type="submit" class="icon-btn{% if is_saved %} active{% endif %}" aria-pressed="{{ is_saved|yesno:'true,false' }}" aria-label="{% if is_saved %}Remove from saved{% else %}Save opportunity{% endif %}">{% icon "bookmark" 16 %}</button>
+    {% endif %}
+</form>

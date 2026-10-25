@@ -1,0 +1,5 @@
+# OPTIONAL: transformer-based semantic matching (Proposal Objective 2).
+# Large install (PyTorch). SkillMatch works without these, using TF-IDF.
+-r requirements.txt
+sentence-transformers>=3.0
+spacy>=3.7

@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+{% load skillmatch_tags %}
+{% block body %}
+<div class="auth">
+    <aside class="auth-hero">
+        <a href="{% url 'home' %}" class="brand"><span class="brand-mark">{% icon "sparkles" 18 %}</span>SkillMatch</a>
+        <span class="eyebrow-tag">Your potential. Your next step.</span>
+        <h1>Great careers start with the right match.</h1>
+        <p class="lede">Discover where your skills can take you. Find opportunities that fit, understand your gaps, and build your path forward.</p>
+
+        <div class="orbit" aria-hidden="true">
+            <div class="ring-o o1"></div>
+            <div class="ring-o o2"></div>
+            <div class="core">{% icon "sparkles" 24 %}<strong>Your potential</strong><span>Connected.</span></div>
+            <div class="chip" style="left:2%;top:8%">{% icon "code-xml" 15 %} React</div>
+            <div class="chip" style="right:0;top:15%">{% icon "users" 15 %} Teamwork</div>
+            <div class="chip" style="left:0;bottom:16%">{% icon "braces" 15 %} TypeScript</div>
+            <div class="chip chip-match" style="right:10%;bottom:4%"><strong>{% icon "check-check" 16 %} Skill match</strong><span>A role that fits you</span></div>
+        </div>
+
+        <div class="auth-points">
+            <div>{% icon "sparkles" 16 %} Personalized, not one-size-fits-all</div>
+            <div>{% icon "route" 16 %} Clear next steps for your skill gaps</div>
+            <div>{% icon "shield-check" 16 %} Your profile, always in your control</div>
+        </div>
+        <p class="auth-copy">© {% now "Y" %} SkillMatch · Built for your next chapter</p>
+    </aside>
+
+    <main class="auth-main">
+        <div class="auth-top">{% block auth_top %}{% endblock %}</div>
+        <div class="auth-form-wrap">
+            <div class="auth-form">
+                {% include "core/partials/messages.html" %}
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+        <nav class="auth-legal" aria-label="Legal">
+            <a href="{% url 'privacy' %}">Privacy policy</a>
+            <a href="{% url 'terms' %}">Terms of service</a>
+            <a href="{% url 'help' %}">Need help?</a>
+        </nav>
+    </main>
+</div>
+{% endblock %}

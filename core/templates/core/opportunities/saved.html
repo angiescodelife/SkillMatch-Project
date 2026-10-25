@@ -1,0 +1,20 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}Saved opportunities{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <p class="eyebrow">Your shortlist</p>
+        <h1>Saved opportunities</h1>
+        <p class="sub">Roles you've bookmarked, with your latest match for each.</p>
+    </div>
+    <div class="page-actions"><a href="{% url 'opportunities' %}" class="btn btn-dark">{% icon "briefcase-business" 15 %} Browse opportunities</a></div>
+</div>
+{% if outcomes %}
+<div class="opp-list" style="max-width:900px">
+    {% for o in outcomes %}{% include "core/partials/opportunity_card.html" with primary=False %}{% endfor %}
+</div>
+{% else %}
+<div class="empty" style="max-width:900px">{% icon "bookmark" 26 %}<h3>Nothing saved yet</h3><p>Tap the bookmark on any opportunity to keep it here for later.</p><a href="{% url 'opportunities' %}" class="btn btn-primary btn-sm">Explore opportunities</a></div>
+{% endif %}
+{% endblock %}

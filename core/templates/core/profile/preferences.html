@@ -1,0 +1,39 @@
+{% extends "core/layouts/app.html" %}
+{% load skillmatch_tags %}
+{% block title %}Career preferences{% endblock %}
+{% block content %}
+{% include "core/profile/_head.html" with save_form="pref-form" %}
+<div class="two-col">
+    <form method="post" id="pref-form" novalidate>
+        {% csrf_token %}
+        <section class="card">
+            <h2 class="card-title">What you're looking for</h2>
+            <p class="card-sub" style="margin-bottom:22px">These preferences make up 15% of each match score: opportunity type, work style, location and start date.</p>
+            <div class="stack" style="--gap:18px">
+                {% include "core/partials/field.html" with field=form.looking_for %}
+                <div class="field">
+                    <span class="field-label">{{ form.opportunity_types.label }}</span>
+                    <div class="pill-check">{% for c in form.opportunity_types %}<span><input type="checkbox" name="{{ c.data.name }}" value="{{ c.data.value }}" id="{{ c.id_for_label }}"{% if c.data.selected %} checked{% endif %}><label for="{{ c.id_for_label }}">{{ c.choice_label }}</label></span>{% endfor %}</div>
+                </div>
+                <div class="field">
+                    <span class="field-label">{{ form.work_styles.label }}</span>
+                    <div class="pill-check">{% for c in form.work_styles %}<span><input type="checkbox" name="{{ c.data.name }}" value="{{ c.data.value }}" id="{{ c.id_for_label }}"{% if c.data.selected %} checked{% endif %}><label for="{{ c.id_for_label }}">{{ c.choice_label }}</label></span>{% endfor %}</div>
+                </div>
+                <div class="form-grid">
+                    {% include "core/partials/field.html" with field=form.preferred_locations icon_name="map-pin" %}
+                    {% include "core/partials/field.html" with field=form.available_from %}
+                </div>
+            </div>
+        </section>
+        <section class="card">
+            <h2 class="card-title" style="margin-bottom:18px">Project portfolio</h2>
+            {% include "core/partials/field.html" with field=form.portfolio_url icon_name="code-xml" %}
+        </section>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
+            <a href="{% url 'career_preferences' %}" class="btn btn-dark">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save preferences</button>
+        </div>
+    </form>
+    {% include "core/profile/_aside.html" %}
+</div>
+{% endblock %}
